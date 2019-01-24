@@ -1,12 +1,14 @@
 #include "mbed.h"
 
-PwmOut right_pwm(A1);
-DigitalOut right_cmd(A0);
-
 PwmOut servo0(D9);
 PwmOut servo1(D10);
 PwmOut servo2(D11);
 PwmOut servo3(D12);
+
+PwmOut right_pwm(A1);
+DigitalOut right_cmd(A0);
+PwmOut left_pwm(A2);
+DigitalOut left_cmd(A3);
 
 void robot_move(double left, double right)
 {
@@ -16,6 +18,14 @@ void robot_move(double left, double right)
     } else {
         right_cmd = 1;
         right_pwm = 1 + right;        
+    }
+
+    if (left >= 0) {
+        left_cmd = 0;
+        left_pwm = right;
+    } else {
+        left_cmd = 1;
+        left_pwm = 1 + right;        
     }
 }
 
@@ -61,6 +71,20 @@ void grab()
     wait(wait_time);
 }
 
+void move_demo()
+{
+    const double wait_time = 2;
+
+    robot_move(0.5, 0.5);
+    wait(wait_time);
+    
+    robot_move(0.5, -0.5);
+    wait(wait_time);
+
+    robot_move(-0.5, -0.5);
+    wait(wait_time);      
+}
+
 void init()
 {
     right_pwm.period_ms(1);
@@ -78,17 +102,10 @@ void init()
 
 int main()
 {  
-    
     init();  
-    wait(2);  
     grab();
-          
-    while(1) {
-//        if (pwm >= 1) direction = -0.1;
-//        if (pwm <= -1) direction = 0.1;
-//        robot_move(pwm, pwm);
-//        pwm += direction;
-//        wait(1);
-
+     
+    while(true) {
+        move_demo();
     }
 }
