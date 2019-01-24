@@ -22,10 +22,10 @@ void robot_move(double left, double right)
 
     if (left >= 0) {
         left_cmd = 0;
-        left_pwm = right;
+        left_pwm = left;
     } else {
         left_cmd = 1;
-        left_pwm = 1 + right;        
+        left_pwm = 1 + left;        
     }
 }
 
@@ -78,7 +78,7 @@ void move_demo()
     robot_move(0.5, 0.5);
     wait(wait_time);
     
-    robot_move(0.5, -0.5);
+    robot_move(0.8, -0.8);
     wait(wait_time);
 
     robot_move(-0.5, -0.5);
@@ -88,6 +88,7 @@ void move_demo()
 void init()
 {
     right_pwm.period_ms(1);
+    left_pwm.period_ms(1);
     
     servo0.period_ms(20);
     servo1.period_ms(20);
@@ -103,7 +104,7 @@ void init()
 int main()
 {  
     init();  
-    grab();
+//    grab();
      
     while(true) {
         move_demo();
