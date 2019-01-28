@@ -2,6 +2,7 @@
 #include <vector>
 #include <sstream>
 #include <fstream>
+#include <optional>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
@@ -15,10 +16,10 @@ void send_to_board(int angle)
 {
     std::fstream board("/dev/ttyACM0");
     board << 'g' << static_cast<int8_t>(angle) << std::flush;
-//    std::cout << "request: g" << angle << std::endl;
+    std::cout << "request: g" << angle << std::endl;
     char response;
     board >> response;
-//    std::cout << "response: " << response << std::endl;
+    std::cout << "response: " << response << std::endl;
 }
 
 std::vector<Vec3f> detect(const Mat& frame_in, Mat& frame_out)
@@ -31,7 +32,7 @@ std::vector<Vec3f> detect(const Mat& frame_in, Mat& frame_out)
     return objects;
 }
 
-void paint(Mat& frame, const std::vector<Vec3f>& objects, const Type type)
+std::optional<int> paint(Mat& frame, const std::vector<Vec3f>& objects, const Type type)
 {
     Point object_center;
     const Scalar color(255, 255, 255);
@@ -52,10 +53,9 @@ void paint(Mat& frame, const std::vector<Vec3f>& objects, const Type type)
             out << " PLASTIC CAP";
         }
         putText(frame, out.str(), Point(150, 50), FONT_HERSHEY_DUPLEX, 1, color);
-
-        send_to_board(degree);
-        return;
+        return degree;
     }
+    return std::nullopt;
 }
 
 int main()
@@ -68,6 +68,8 @@ int main()
         return -1;
     }
 
+    namedWindow("detect");
+
     while(true) {
         Mat frame;
         cap >> frame;
@@ -78,10 +80,20 @@ int main()
         Mat frame_out;
 
         std::vector<Vec3f> objects = detect(frame, frame_out);
-        paint(frame_out, objects, Type::PLASTIC_CAP);
+        auto result = paint(frame_out, objects, Type::PLASTIC_CAP);
 
-        imshow("camera", frame);
+//        imshow("camera", frame);
         imshow("detect", frame_out);
+
+ 	if (result) {
+            if (waitKey(500) == /* ESC */ 27) {
+                break;
+            }
+            send_to_board(*result);
+	    for(int i=0; i<50; i++) {
+ 	       cap >> frame;
+	    }
+	}
 
         if (waitKey(33) == /* ESC */ 27) {
             break;
