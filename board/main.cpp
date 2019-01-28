@@ -7,8 +7,12 @@ PwmOut servo3(D12);
 
 PwmOut right_pwm(A1);
 DigitalOut right_cmd(A0);
-PwmOut left_pwm(A2);
-DigitalOut left_cmd(A3);
+PwmOut left_pwm(A3);        // A2
+DigitalOut left_cmd(A2);    // A3
+
+DigitalOut led(LED1);
+
+Serial device(USBTX, USBRX);
 
 void robot_move(double left, double right)
 {
@@ -77,18 +81,70 @@ void move_demo()
 
     robot_move(0.5, 0.5);
     wait(wait_time);
-    
+
     robot_move(0.8, -0.8);
     wait(wait_time);
-
+    
     robot_move(-0.5, -0.5);
     wait(wait_time);      
 }
 
-void init()
+double angle_to_time(int angle)
 {
-    right_pwm.period_ms(1);
-    left_pwm.period_ms(1);
+    return 0.015 * abs(angle);
+}
+
+void move_to_object(int angle)
+{
+    const double wait_time = 2;
+
+    if (angle > 0) {
+        robot_move(0.8, -0.8);
+    } else {
+        robot_move(-0.8, 0.8);
+    }
+    wait(angle_to_time(angle));
+    
+    robot_move(0.5, 0.5);
+    wait(wait_time);     
+    
+    robot_move(0, 0); 
+    wait(wait_time / 4);
+}
+
+void move_from_object(int angle)
+{
+    const double wait_time = 2;
+  
+    robot_move(-0.5, -0.5);
+    wait(wait_time);      
+
+    if (angle > 0) {
+        robot_move(-0.8, 0.8);
+    } else {
+        robot_move(0.8, -0.8);
+    }
+    wait(angle_to_time(angle));
+
+    robot_move(0, 0); 
+    wait(wait_time / 4);
+}
+
+
+void serial_callback()
+{
+    char cmd = device.getc();
+    int8_t angle = device.getc();
+    move_to_object(angle);
+    grab();
+    move_from_object(angle);
+    device.putc(cmd);
+}
+
+void init() 
+{   
+//    right_pwm.period_ms(1);
+//    left_pwm.period_ms(1);
     
     servo0.period_ms(20);
     servo1.period_ms(20);
@@ -104,9 +160,14 @@ void init()
 int main()
 {  
     init();  
-//    grab();
+    
+    device.baud(9600);
+    device.attach(&serial_callback, Serial::RxIrq);
      
     while(true) {
-        move_demo();
+//        move_demo();
+        led = !led;
+        wait(1);
     }
 }
+
