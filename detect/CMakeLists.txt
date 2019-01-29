@@ -1,12 +1,10 @@
 cmake_minimum_required(VERSION 2.8)
 project(detect)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_EXTENSIONS OFF)
 add_compile_options(
-    "-Wall" "-Wextra"
-    "$<$<CONFIG:DEBUG>:-O0;-g3;-ggdb>"
-    "$<$<CONFIG:RELEASE>:-O3>"
+    "-Wall" "-Wextra" "-O3"
 )
 
 set(SRC_LIST
