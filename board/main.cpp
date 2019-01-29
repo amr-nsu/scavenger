@@ -7,8 +7,8 @@ PwmOut servo3(D12);
 
 PwmOut right_pwm(A1);
 DigitalOut right_cmd(A0);
-PwmOut left_pwm(A3);        // A2
-DigitalOut left_cmd(A2);    // A3
+PwmOut left_pwm(A2);
+DigitalOut left_cmd(A3);
 
 DigitalOut led(LED1);
 
@@ -134,17 +134,40 @@ void move_from_object(int angle)
 void serial_callback()
 {
     char cmd = device.getc();
-    int8_t angle = device.getc();
-    move_to_object(angle);
-    grab();
-    move_from_object(angle);
-    device.putc(cmd);
+    switch(cmd) {
+    case 'g': {
+        int8_t angle = device.getc();
+        move_to_object(angle);
+        grab();
+        move_from_object(angle);
+        device.putc(cmd);
+        break;
+    }
+    case 'f':
+        robot_move(0.5, 0.5);
+        break;
+    case 'b':
+        robot_move(-0.5, -0.5);
+        break;
+    case 'r':
+        robot_move(0.8, -0.8);
+        break;
+    case 'l':
+        robot_move(-0.8, 0.8);
+        break;
+    case 's':
+        robot_move(0, 0);
+        break;
+    case 't':
+        grab();
+        break;
+    }
 }
 
 void init() 
 {   
-//    right_pwm.period_ms(1);
-//    left_pwm.period_ms(1);
+    right_pwm.period_ms(1);
+    left_pwm.period_ms(1);
     
     servo0.period_ms(20);
     servo1.period_ms(20);
@@ -170,4 +193,3 @@ int main()
         wait(1);
     }
 }
-
