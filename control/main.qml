@@ -9,7 +9,7 @@ Window {
     title: qsTr("control")
 
     Text {
-        text: "<p>Up - вперед</p><p>Down - назад</p><p>Left - налево</p><p>Right - направо</p><p>Space - стор</p><p>G - захват</p>"
+        text: "<p>Up - вперед</p><p>Down - назад</p><p>Left - налево</p><p>Right - направо</p><p>Space - стоп</p><p>G - захват</p><p>U - поднять</p><p>D - опустить</p>"
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
         font.pointSize: 20
@@ -30,6 +30,12 @@ Window {
             }
             if (event.key === Qt.Key_G) {
                 console.log("t");
+            }
+            if (event.key === Qt.Key_U) {
+                console.log("u");
+            }
+            if (event.key === Qt.Key_D) {
+                console.log("d");
             }
             if (event.key === Qt.Key_Space) {
                 console.log("s");

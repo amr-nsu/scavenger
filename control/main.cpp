@@ -4,7 +4,9 @@
 
 void messageHandler(QtMsgType /* type */, const QMessageLogContext& /* mlc */, const QString& msg)
 {
-    std::cout << msg.toStdString() << std::endl;
+    if (msg.size() == 1) {
+        std::cout << msg.toStdString() << std::endl;
+    }
 }
 
 int main(int argc, char *argv[])

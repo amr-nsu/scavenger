@@ -20,14 +20,20 @@ struct Object
     int     angleDeg;
 };
 
-void sendToBoard(int angle)
+void sendToBoard(const Object& object)
 {
     std::fstream board("/dev/ttyACM0");
-    board << 'g' << static_cast<int8_t>(angle) << std::flush;
-    std::cout << "request: g" << angle << std::endl;
+    board << 'g' << static_cast<int8_t>(object.angleDeg);
+    if (object.type == Object::Type::PLASTIC_CUP) {
+        board << '1';
+    } else {
+        board << '2';
+    }
+    board  <<  std::flush;
+//    std::cout << "request: x" << object.angleDeg << std::endl;
     char response;
     board >> response;
-    std::cout << "response: " << response << std::endl;
+//    std::cout << "response: " << response << std::endl;
 }
 
 double angle( Point pt1, Point pt2, Point pt0 )
@@ -145,7 +151,7 @@ int main()
     constexpr int camera = 0;
 
     VideoCapture cap;
-    cap.set(CV_CAP_PROP_BUFFERSIZE, 3);
+    cap.set(CV_CAP_PROP_BUFFERSIZE, 1);
     if (!cap.open(camera)) {
         std::cerr << "Video device " << camera << " is not open" << std::endl;
         return -1;
@@ -171,16 +177,13 @@ int main()
 
         imshow("detect", frameGray);
 
-        if (waitKey(33) == /* ESC */ 27) {
+        if (waitKey(330) == /* ESC */ 27) {
             break;
         }
 
         if (object.type != Object::Type::NO_OBJECT) {
-            if (waitKey(100) == /* ESC */ 27) {
-                break;
-            }
-            sendToBoard(object.angleDeg);
-            for(int i=0; i<3; i++) {
+            sendToBoard(object);
+            for(int i=0; i<25; i++) {
                cap >> frame;
             }
         }
