@@ -4,6 +4,7 @@ PwmOut servo0(D9);
 PwmOut servo1(D10);
 PwmOut servo2(D11);
 PwmOut servo3(D12);
+PwmOut servo4(D7);
 
 PwmOut right_pwm(A1);
 DigitalOut right_cmd(A0);
@@ -13,6 +14,8 @@ DigitalOut left_cmd(A3);
 DigitalOut led(LED1);
 
 Serial device(USBTX, USBRX);
+
+double box_pose = 0.1;  // cup
 
 void robot_move(double left, double right)
 {
@@ -49,7 +52,53 @@ void servo_move(PwmOut& servo, double from, double to)
     }
 }
 
-void grab()
+double get_grab_value(char type)
+{
+    if (type == '1') {  // cup
+        return 0.3;
+    }
+    return 0.5;         // box
+}
+
+double get_box_pose(char type)
+{
+    if (type == '1') {  // cup
+        return 0.1;
+    }
+    return 0.9;         // box    
+}
+
+void grab(char type='2')
+{
+    const double wait_time = 0.2;
+        
+    servo_move(servo1, 0.2, 0.1);
+    wait(wait_time);
+    
+    servo_move(servo3, 0.9, get_grab_value(type));
+    wait(wait_time);
+
+    servo_move(servo0, 1.0, 0.15);
+    wait(wait_time);
+    
+    servo_move(servo4, box_pose, get_box_pose(type));
+    box_pose = get_box_pose(type);
+    wait(wait_time);
+    
+    servo_move(servo1, 0.1, 0.7);
+    wait(wait_time);
+    
+    servo_move(servo3, get_grab_value(type), 0.9);
+    wait(wait_time);
+
+    servo_move(servo1, 0.7, 0.2);
+    wait(wait_time);
+
+    servo_move(servo0, 0.15, 1.00);
+    wait(wait_time);
+}
+
+void grab_up()
 {
     const double wait_time = 0.2;
     
@@ -59,21 +108,31 @@ void grab()
     servo_move(servo3, 0.8, 0.5);
     wait(wait_time);
 
-    servo_move(servo0, 1.0, 0.2);
+    servo_move(servo0, 1.0, 0.4);
     wait(wait_time);
     
-    servo_move(servo1, 0.1, 0.6);
+    servo_move(servo1, 0.1, 0.4);
+    wait(wait_time);
+    
+}
+
+void grab_down()
+{
+    const double wait_time = 0.2;
+
+    servo_move(servo1, 0.4, 0.1);
+    wait(wait_time);   
+
+    servo_move(servo0, 0.4, 1.0);
     wait(wait_time);
     
     servo_move(servo3, 0.5, 0.8);
     wait(wait_time);
 
-    servo_move(servo1, 0.6, 0.2);
-    wait(wait_time);
-
-    servo_move(servo0, 0.2, 1.00);
+    servo_move(servo1, 0.1, 0.2);
     wait(wait_time);
 }
+
 
 void move_demo()
 {
@@ -130,16 +189,25 @@ void move_from_object(int angle)
     wait(wait_time / 4);
 }
 
-
 void serial_callback()
 {
     char cmd = device.getc();
     switch(cmd) {
     case 'g': {
         int8_t angle = device.getc();
+        char type = device.getc();
         move_to_object(angle);
-        grab();
+        grab(type);
         move_from_object(angle);
+        device.putc(cmd);
+        break;
+    }
+    case 'x': {
+        int8_t angle = device.getc();
+        char type = device.getc();
+        wait(5);
+        grab(type);
+        wait(2);
         device.putc(cmd);
         break;
     }
@@ -161,6 +229,12 @@ void serial_callback()
     case 't':
         grab();
         break;
+    case 'u':
+        grab_up();
+        break;
+    case 'd':
+        grab_down();
+        break;
     }
 }
 
@@ -173,11 +247,13 @@ void init()
     servo1.period_ms(20);
     servo2.period_ms(20);
     servo3.period_ms(20);
+    servo4.period_ms(20);
     
     servo_position(servo0, 1.0);
     servo_position(servo1, 0.2);
     servo_position(servo2, 0.5);
-    servo_position(servo3, 0.8);
+    servo_position(servo3, 0.9);
+    servo_position(servo4, box_pose);
 }
 
 int main()
@@ -186,10 +262,10 @@ int main()
     
     device.baud(9600);
     device.attach(&serial_callback, Serial::RxIrq);
-     
+       
     while(true) {
-//        move_demo();
         led = !led;
         wait(1);
     }
 }
+
