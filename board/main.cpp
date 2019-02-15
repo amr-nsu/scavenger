@@ -78,7 +78,7 @@ void grab(char type='2')
     servo_move(servo3, 0.9, get_grab_value(type));
     wait(wait_time);
 
-    servo_move(servo0, 1.0, 0.15);
+    servo_move(servo0, 1.0, 0.2);
     wait(wait_time);
     
     servo_move(servo4, box_pose, get_box_pose(type));
@@ -94,7 +94,7 @@ void grab(char type='2')
     servo_move(servo1, 0.7, 0.2);
     wait(wait_time);
 
-    servo_move(servo0, 0.15, 1.00);
+    servo_move(servo0, 0.2, 1.00);
     wait(wait_time);
 }
 
@@ -133,30 +133,13 @@ void grab_down()
     wait(wait_time);
 }
 
-
-void move_demo()
-{
-    const double wait_time = 2;
-
-    robot_move(0.5, 0.5);
-    wait(wait_time);
-
-    robot_move(0.8, -0.8);
-    wait(wait_time);
-    
-    robot_move(-0.5, -0.5);
-    wait(wait_time);      
-}
-
 double angle_to_time(int angle)
 {
     return 0.015 * abs(angle);
 }
 
-void move_to_object(int angle)
+void move_to_object(int angle, double time = 2.0)
 {
-    const double wait_time = 2;
-
     if (angle > 0) {
         robot_move(0.8, -0.8);
     } else {
@@ -165,18 +148,15 @@ void move_to_object(int angle)
     wait(angle_to_time(angle));
     
     robot_move(0.5, 0.5);
-    wait(wait_time);     
+    wait(time);
     
     robot_move(0, 0); 
-    wait(wait_time / 4);
 }
 
-void move_from_object(int angle)
+void move_from_object(int angle, double time = 2.0)
 {
-    const double wait_time = 2;
-  
     robot_move(-0.5, -0.5);
-    wait(wait_time);      
+    wait(time);
 
     if (angle > 0) {
         robot_move(-0.8, 0.8);
@@ -186,14 +166,13 @@ void move_from_object(int angle)
     wait(angle_to_time(angle));
 
     robot_move(0, 0); 
-    wait(wait_time / 4);
 }
 
 void serial_callback()
 {
     char cmd = device.getc();
     switch(cmd) {
-    case 'g': {
+    case 'g': {  // move and grab
         int8_t angle = device.getc();
         char type = device.getc();
         move_to_object(angle);
@@ -202,12 +181,19 @@ void serial_callback()
         device.putc(cmd);
         break;
     }
-    case 'x': {
+    case 'x': {  // grab without moving
         int8_t angle = device.getc();
         char type = device.getc();
         wait(5);
         grab(type);
         wait(2);
+        device.putc(cmd);
+        break;
+    }
+    case 'z': {  // rotate to object without grabbing
+        int8_t angle = device.getc();
+        char type = device.getc();
+        move_to_object(angle, 0);
         device.putc(cmd);
         break;
     }
@@ -268,4 +254,3 @@ int main()
         wait(1);
     }
 }
-
