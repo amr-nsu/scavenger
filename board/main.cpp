@@ -15,7 +15,15 @@ DigitalOut led(LED1);
 
 Serial device(USBTX, USBRX);
 
-double box_pose = 0.1;  // cup
+
+namespace
+{
+    double box_pose = 0.1;  // cup
+
+    const double MOVE_VEL = 0.5;
+    const double ROTATE_VEL = 0.8;
+    const double DEG_TO_SEC_GAIN = 0.015;
+}
 
 void robot_move(double left, double right)
 {
@@ -135,19 +143,19 @@ void grab_down()
 
 double angle_to_time(int angle)
 {
-    return 0.015 * abs(angle);
+    return DEG_TO_SEC_GAIN * abs(angle);
 }
 
 void move_to_object(int angle, double time = 2.0)
 {
     if (angle > 0) {
-        robot_move(0.8, -0.8);
+        robot_move(ROTATE_VEL, -ROTATE_VEL);
     } else {
-        robot_move(-0.8, 0.8);
+        robot_move(-ROTATE_VEL, ROTATE_VEL);
     }
     wait(angle_to_time(angle));
     
-    robot_move(0.5, 0.5);
+    robot_move(MOVE_VEL, MOVE_VEL);
     wait(time);
     
     robot_move(0, 0); 
@@ -155,13 +163,13 @@ void move_to_object(int angle, double time = 2.0)
 
 void move_from_object(int angle, double time = 2.0)
 {
-    robot_move(-0.5, -0.5);
+    robot_move(-MOVE_VEL, -MOVE_VEL);
     wait(time);
 
     if (angle > 0) {
-        robot_move(-0.8, 0.8);
+        robot_move(-ROTATE_VEL, ROTATE_VEL);
     } else {
-        robot_move(0.8, -0.8);
+        robot_move(ROTATE_VEL, -ROTATE_VEL);
     }
     wait(angle_to_time(angle));
 
@@ -198,16 +206,16 @@ void serial_callback()
         break;
     }
     case 'f':
-        robot_move(0.5, 0.5);
+        robot_move(MOVE_VEL, MOVE_VEL);
         break;
     case 'b':
-        robot_move(-0.5, -0.5);
+        robot_move(-MOVE_VEL, -MOVE_VEL);
         break;
     case 'r':
-        robot_move(0.8, -0.8);
+        robot_move(ROTATE_VEL, -ROTATE_VEL);
         break;
     case 'l':
-        robot_move(-0.8, 0.8);
+        robot_move(-ROTATE_VEL, ROTATE_VEL);
         break;
     case 's':
         robot_move(0, 0);
