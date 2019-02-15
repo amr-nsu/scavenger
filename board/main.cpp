@@ -21,6 +21,8 @@ namespace
     double box_pose = 0.1;  // cup
 
     const double MOVE_VEL = 0.5;
+    const double MOVE_TIME = 1.5;
+    const double SMALL_MOVE_TIME = 0.5;
     const double ROTATE_VEL = 0.8;
     const double DEG_TO_SEC_GAIN = 0.015;
 }
@@ -146,7 +148,7 @@ double angle_to_time(int angle)
     return DEG_TO_SEC_GAIN * abs(angle);
 }
 
-void move_to_object(int angle, double time = 2.0)
+void move_to_object(int angle, double time = MOVE_TIME)
 {
     if (angle > 0) {
         robot_move(ROTATE_VEL, -ROTATE_VEL);
@@ -161,7 +163,7 @@ void move_to_object(int angle, double time = 2.0)
     robot_move(0, 0); 
 }
 
-void move_from_object(int angle, double time = 2.0)
+void move_from_object(int angle, double time = MOVE_TIME)
 {
     robot_move(-MOVE_VEL, -MOVE_VEL);
     wait(time);
@@ -189,6 +191,15 @@ void serial_callback()
         device.putc(cmd);
         break;
     }
+    case 'v': {  // move not full distance and grab
+        int8_t angle = device.getc();
+        char type = device.getc();
+        move_to_object(angle, MOVE_TIME - SMALL_MOVE_TIME);
+        grab(type);
+        move_from_object(angle);
+        device.putc(cmd);
+        break;
+    }
     case 'x': {  // grab without moving
         int8_t angle = device.getc();
         char type = device.getc();
@@ -202,6 +213,13 @@ void serial_callback()
         int8_t angle = device.getc();
         char type = device.getc();
         move_to_object(angle, 0);
+        device.putc(cmd);
+        break;
+    }
+    case 'c': {  // rotate and small move to object without grabbing
+        int8_t angle = device.getc();
+        char type = device.getc();
+        move_to_object(angle, SMALL_MOVE_TIME);
         device.putc(cmd);
         break;
     }
